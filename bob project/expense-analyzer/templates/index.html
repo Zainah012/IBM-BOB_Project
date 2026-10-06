@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Personal Expense Analyzer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <!-- Chart.js for visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="container">
+      <div class="header-brand">
+        <span class="header-icon">💰</span>
+        <div>
+          <h1 class="header-title">AI Personal Expense Analyzer</h1>
+          <p class="header-subtitle">Upload your expense data and get automated insights</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+
+    <!-- ── Step 1: Upload ─────────────────────────────── -->
+    <section class="card" id="upload-section">
+      <div class="card-header">
+        <span class="step-badge">1</span>
+        <h2>Upload Your Expense CSV</h2>
+      </div>
+      <div class="card-body">
+        <div class="upload-area" id="upload-area">
+          <div class="upload-icon">📂</div>
+          <p class="upload-label">Drag &amp; drop your CSV file here, or click to browse</p>
+          <p class="upload-hint">Supported format: <strong>.csv</strong> — Max size: 10 MB</p>
+          <input type="file" id="csv-file-input" accept=".csv" hidden />
+          <button class="btn btn-primary" id="browse-btn">Browse File</button>
+        </div>
+
+        <div class="upload-status hidden" id="upload-status">
+          <span class="status-icon" id="status-icon"></span>
+          <span id="status-message"></span>
+        </div>
+
+        <div class="upload-actions hidden" id="upload-actions">
+          <button class="btn btn-success" id="analyze-btn">
+            🔍 Analyze My Expenses
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Loading Spinner ────────────────────────────── -->
+    <div class="loading hidden" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing your expense data…</p>
+    </div>
+
+    <!-- ── Step 2: Summary Cards ──────────────────────── -->
+    <section class="hidden" id="summary-section">
+      <h2 class="section-title">📊 Expense Summary</h2>
+      <div class="summary-grid" id="summary-grid">
+        <!-- Populated dynamically by main.js renderSummary() -->
+      </div>
+    </section>
+
+    <!-- ── Step 3: Charts ─────────────────────────────── -->
+    <section class="hidden" id="charts-section">
+      <h2 class="section-title">📈 Visualizations</h2>
+      <div class="charts-grid">
+
+        <div class="card chart-card">
+          <h3 class="chart-title">Category-wise Spending</h3>
+          <div class="chart-wrapper">
+            <canvas id="category-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <h3 class="chart-title">Monthly Spending Trend</h3>
+          <div class="chart-wrapper">
+            <canvas id="monthly-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="card chart-card chart-card--wide">
+          <h3 class="chart-title">Top Spending Categories</h3>
+          <div class="chart-wrapper chart-wrapper--tall">
+            <canvas id="top-expenses-chart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Step 3b: Top 10 Transactions Table ────────── -->
+    <section class="hidden" id="top-table-section">
+      <h2 class="section-title">🔝 Top 10 Highest Expense Transactions</h2>
+      <div class="card">
+        <div class="table-wrapper">
+          <table class="expense-table" id="top-expense-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="top-expense-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Step 4: AI Insights ────────────────────────── -->
+    <section class="hidden" id="insights-section">
+      <h2 class="section-title">🤖 AI-Powered Insights</h2>
+      <div class="card">
+        <div class="card-body" id="insights-content">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Step 5: Suggestions ────────────────────────── -->
+    <section class="hidden" id="suggestions-section">
+      <h2 class="section-title">💡 Spending Management Suggestions</h2>
+      <div class="card">
+        <div class="card-body" id="suggestions-content">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Step 6: Ask AI ─────────────────────────────── -->
+    <section class="hidden" id="qa-section">
+      <h2 class="section-title">💬 Ask About Your Expenses</h2>
+      <div class="card">
+        <div class="card-body">
+          <p class="qa-hint">Ask any question about your uploaded expense data. For example:<br>
+            <em>"What was my highest spending month?"</em> &nbsp;|&nbsp;
+            <em>"How much did I spend on food?"</em>
+          </p>
+          <div class="qa-input-row">
+            <input
+              type="text"
+              id="qa-input"
+              class="qa-input"
+              placeholder="Type your question here…"
+            />
+            <button class="btn btn-primary" id="qa-submit-btn">Ask</button>
+          </div>
+          <div class="qa-answer hidden" id="qa-answer">
+            <div class="qa-answer-label">Answer</div>
+            <div id="qa-answer-text"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────── -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>AI Personal Expense Analyzer &mdash; AI/ML Internship Project</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
